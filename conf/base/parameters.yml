@@ -1,0 +1,95 @@
+# features:
+  # Apart from 'Load' and 'Temperature', which will always be used, choose from:
+    # Charpy_notched_+23C, Charpy_notched_-30C, Charpy_+23C, Tensile_modulus,
+    # Molding_shrinkage_normal, Molding_shrinkage_parallel,
+    # Coeff_linear_therm_expansion_normal, Coeff_linear_therm_expansion_parallel,
+    # Melting_temp, Temp_deflection_0.45MPa, Temp_deflection_1.80MPa,
+    # Vicat_softening_temp, Density, Humidity_absorption, G_prima, G_2prima
+
+features: 
+  - R_100/10
+  - CM_100
+  - CM_10
+
+target: R_1000/100
+
+random_state: 1358 # random state for reproducibility
+
+# feature_engineering:
+  # implemented functions: log_features, feature_interactions, square_ratios. 
+  # If none wanted, set to null or leave blank.
+feature_engineering: 
+
+# cross-validation parameters
+groupby_col: Family # column to group by for cv
+k_fold_outer: 10 # number of folds for outer cv
+k_fold_inner: 5  # number of folds for inner cv
+n_iter: 1   # number of iterations for hyperparameter optimization
+
+# W&B parameters
+use_wandb: False
+track_inner: False
+project_name: Dialect-CM_10000-last
+notes: 
+experiment_name: CM_1_000_2.0 # If null or not specified, will be automatically generated
+
+# Specify the model to use and the metric to optimize for.
+model: LGBMRegressor # must be in ['RandomForestRegressor', 'LGBMRegressor', 'XGBRegressor', 'CatBoostRegressor']
+metric: r2         # must be in ['r2', 'mse', 'mae', 'rmse', 'mape']
+
+# Specify the hyperparameter grid for the chosen model.
+hyperparameter_grid:
+
+  XGBRegressor:
+    n_estimators: [100, 200, 500]
+    learning_rate: [0.01, 0.05, 0.1]
+    max_depth: [3, 5, 7]
+    min_child_weight: [1, 3, 5]
+    gamma: [0.0, 0.1, 0.2]
+    subsample: [0.8, 1.0]
+    colsample_bytree: [0.6, 0.8, 1.0]
+    reg_lambda: [0.0, 0.5, 1.0]
+    reg_alpha: [0.0, 0.5, 1.0]
+
+  CatBoostRegressor:
+    iterations: [100, 200, 500]
+    depth: [6, 8, 10]
+    learning_rate: [0.01, 0.05, 0.1]
+    l2_leaf_reg: [1, 3, 5]
+    border_count: [32, 128, 255]
+    bagging_temperature: [0.0, 0.5, 1.0]
+    random_strength: [0.0, 0.5, 1.0]
+
+  LGBMRegressor:
+    boosting_type: ["gbdt"]
+    #num_leaves: [20, 40, 60, 80, 100] 
+    #max_depth: [-1, 10, 20, 30, 40]
+    #learning_rate: [0.001, 0.01, 0.1, 0.2, 0.3]
+    #n_estimators: [100, 200, 500, 1000, 1500]
+    #subsample_for_bin: [2000, 4000, 6000, 8000, 10000] 
+    #min_split_gain: [0.0, 0.2, 0.4]
+    #min_child_weight: [1e-3, 1e-2, 1e-1, 1, 10] 
+    #min_child_samples: [5, 10, 20, 30, 40]
+    #subsample: [0.6, 0.7, 0.8, 0.9, 1.0]
+    #subsample_freq: [0, 1, 2, 3]
+    #colsample_bytree: [0.6, 0.7, 0.8, 0.9, 1.0]
+    #reg_alpha: [0.0, 0.5, 1.0, 1.5, 2.0]
+    #reg_lambda: [0.0, 0.5, 1.0, 1.5, 2.0]
+    #scale_pos_weight: [0.5, 1.0, 1.5, 2.0, 2.5]
+    
+  RandomForestRegressor:
+    criterion: ["squared_error", "friedman_mse", "absolute_error", "poisson"]
+    n_estimators: [100, 200, 500]
+    max_depth: [5, 10, null]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 4]
+    max_features: [0.5, 1.0, 'sqrt', 'log2']
+
+  DecisionTreeRegressor:
+    criterion: ["squared_error", "friedman_mse", "absolute_error", "poisson"]
+    splitter: ["best", "random"]
+    max_depth: [null, 5, 10, 20, 30]
+    min_samples_split: [2, 4, 6, 8, 10]
+    min_samples_leaf: [1, 2, 4, 6, 8]
+    min_weight_fraction_leaf: [0.0, 0.1, 0.2, 0.3, 0.4]
+    max_features: [null, 0.5, 1.0, 'sqrt', 'log']
