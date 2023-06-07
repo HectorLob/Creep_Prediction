@@ -291,7 +291,7 @@ dependencies:
       - isort==5.12.0
       - jsonschema==4.17.3
       - jupyter==1.0.0
-      - jupyter-client==8.2.0
+      - jupyter-client==7.3.4
       - jupyter-console==6.6.3
       - jupyter-server==1.24.0
       - jupyterlab==3.5.3
@@ -300,7 +300,7 @@ dependencies:
       - jupyterlab-widgets==3.0.7
       - kedro-datasets==1.2.0
       - kedro-telemetry==0.2.4
-      - kedro-viz==6.1.1
+      - kedro-viz==6.2.0
       - lxml==4.9.2
       - mccabe==0.6.1
       - mistune==2.0.5

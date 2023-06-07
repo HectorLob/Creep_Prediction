@@ -1,5 +1,10 @@
 # Polymer creep modulus prediction by leveraging CAMPUS database and gradient boosting
 
+This repository contains the supporting code for the presentation "Polymer creep modulus prediction by leveraging CAMPUS database and gradient boosting" at the [The ECCOMAS Young Investigators Conference YIC2023](https://yic2023.fe.up.pt/). See the extended abstract [here](https://yic2023.fe.up.pt/wp-content/uploads/2023/05/SC03_04.pdf).
+
+All credit for the dataset to the [CAMPUS Plastics](https://www.campusplastics.com/) material information system. 
+
+
 ## How to install dependencies
 
 Create conda environment:
@@ -39,6 +44,12 @@ Or run a specific pipeline with:
 kedro run --pipeline PIPELINE_NAME
 ```
 
+To visualize the project structure and data pipelines, run:
+
+```
+kedro viz
+```
+
 ## How to define experiments:
 
 All the necessary parameters for the experiments are defined in `conf/base/parameters.yml`. Additional information about the parameters can be found in the same file.
@@ -46,4 +57,4 @@ All the necessary parameters for the experiments are defined in `conf/base/param
 
 ## Experiment tracking:
 
-To track the experiments Weights & Biases, you need to create a account and set `use_wandb: True` in `conf/base/parameters.yml`. If set to `False`, you can inspect the `model_evalution_metrics.pickle` in `data/05_reporting`.
+To track the experiments with Weights & Biases, you need to create an account and set `use_wandb: True` in `conf/base/parameters.yml`. If set to `False`, you can inspect the `model_evalution_metrics.pickle` corresponding to the experiment in `data/05_reporting`.
