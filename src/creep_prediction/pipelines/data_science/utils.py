@@ -31,7 +31,7 @@ def map_ratio_to_CM(target: str) -> tuple[str, str]:
 
 
 def predicted_ratio_to_CM(y_true_ratio: pd.Series, y_pred_ratio: pd.Series, 
-                          target: str, CM_df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
+                          target: str, info_df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     """Obtain the true and predicted CM values from the true and predicted ratio values and the info df.
 
     Args:
@@ -39,7 +39,7 @@ def predicted_ratio_to_CM(y_true_ratio: pd.Series, y_pred_ratio: pd.Series,
     - y_true_ratio (pd.Series): True ratio values (y_dev or y_test)
     - y_pred_ratio (pd.Series): Predicted ratio values.
     - target (str): Target variable name, either starting with 'CM' or 'R_'.
-    - CM_df (pd.DataFrame): DataFrame containing the true CM values.
+    - info_df (pd.DataFrame): DataFrame containing the true CM values.
 
     Returns:
     --------
@@ -49,8 +49,8 @@ def predicted_ratio_to_CM(y_true_ratio: pd.Series, y_pred_ratio: pd.Series,
     CM_predict_str, CM_before_str = map_ratio_to_CM(target)
 
     # Get true CM values from info df
-    CM_true = CM_df.loc[y_true_ratio.index, CM_predict_str]
-    CM_before = CM_df.loc[y_true_ratio.index, CM_before_str]
+    CM_true = info_df.loc[y_true_ratio.index, CM_predict_str]
+    CM_before = info_df.loc[y_true_ratio.index, CM_before_str]
 
     # Get predicted CM values
     CM_pred = y_pred_ratio * CM_before # e.g. CM_1000 = R_1000/100 * CM_100
@@ -112,7 +112,8 @@ def wandb_inner_fold(parameters: dict, data_info_dict: dict, dev_score: float,
 
 
 def wandb_outer_fold(parameters: dict, df_traindev: pd.DataFrame, df_test: pd.DataFrame, 
-                     best_model_hyps: dict, score_error_dict: dict, analysis_df: pd.DataFrame, k_fold_outer: int):
+                     best_model_hyps: dict, score_error_dict: dict, 
+                     analysis_df: pd.DataFrame, k_fold_outer: int):
     """
     Track the results of the outer fold of the cross-validation.
 
@@ -197,9 +198,10 @@ def wandb_final_results(final_score_dict: dict, parameters: dict,
 
 
 def return_analysis_df(y_true: pd.Series, y_pred: pd.Series,
-                       info_df: pd.DataFrame, target: str,
+                       info_df: pd.DataFrame, 
+                       target: str,
                        k_fold_test: int,
-                       y_pred_R: pd.Series = None) -> pd.DataFrame:
+                       y_pred_R: pd.Series=None) -> pd.DataFrame:
     """
     Return a DataFrame with info columns, CM columns, predicted CM and relative error %.
 

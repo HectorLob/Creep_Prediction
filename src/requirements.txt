@@ -12,6 +12,7 @@ pytest-cov~=3.0
 pytest-mock>=1.7.1, <2.0
 catboost==1.2
 kedro==0.18.8
+kedro_datasets[pandas]==1.4.0
 kedro_viz==6.1.1
 lightgbm==3.3.5
 matplotlib==3.7.1

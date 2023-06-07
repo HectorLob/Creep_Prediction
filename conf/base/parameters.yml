@@ -1,3 +1,8 @@
+# target:
+  # CM values can go here, although ratios are recommended
+  # When we set a ratio as target, e.g. R_1000/100, CM_1000 will be computed as CM_1000 = R_1000/100 * CM_100
+target: R_1000/100
+
 # features:
   # Apart from 'Load' and 'Temperature', which will always be used, choose from:
     # Charpy_notched_+23C, Charpy_notched_-30C, Charpy_+23C, Tensile_modulus,
@@ -5,33 +10,35 @@
     # Coeff_linear_therm_expansion_normal, Coeff_linear_therm_expansion_parallel,
     # Melting_temp, Temp_deflection_0.45MPa, Temp_deflection_1.80MPa,
     # Vicat_softening_temp, Density, Humidity_absorption, G_prima, G_2prima
-
+  # Adding previous ratios is important to obtain good results, e.g.:
+    # R_100/10, R_1000/100 for target: R_10000/1000
 features: 
   - R_100/10
   - CM_100
   - CM_10
 
-target: R_1000/100
-
 random_state: 1358 # random state for reproducibility
 
 # feature_engineering:
-  # implemented functions: log_features, feature_interactions, square_ratios. 
+  # Implemented functions: log_features, feature_interactions, square_ratios. 
   # If none wanted, set to null or leave blank.
+  # If more than one wanted, list them in the order you want them to be applied.
 feature_engineering: 
+  - log_features
+  - feature_interactions
 
-# cross-validation parameters
+# Nested cross-validation parameters:
 groupby_col: Family # column to group by for cv
 k_fold_outer: 10 # number of folds for outer cv
 k_fold_inner: 5  # number of folds for inner cv
 n_iter: 1   # number of iterations for hyperparameter optimization
 
 # W&B parameters
-use_wandb: False
-track_inner: False
-project_name: Dialect-CM_10000-last
-notes: 
-experiment_name: CM_1_000_2.0 # If null or not specified, will be automatically generated
+use_wandb: True # True or False
+track_inner: False # True or False, whether to track inner cv results
+project_name: Creep_prediction # Name of the project in W&B
+notes: # optional
+experiment_name: # If null or not specified, will be automatically generated
 
 # Specify the model to use and the metric to optimize for.
 model: LGBMRegressor # must be in ['RandomForestRegressor', 'LGBMRegressor', 'XGBRegressor', 'CatBoostRegressor']
