@@ -69,6 +69,7 @@ def _return_experiment_name(parameters: dict) -> str:
         return str(uuid.uuid4())[:5] # Return a random string of 5 characters
 
 
+
 def _return_config(parameters: dict) -> dict:
     """Return the parameters of the current experiment configuration.
     """
@@ -174,7 +175,7 @@ def wandb_final_results(final_score_dict: dict, parameters: dict,
     """
     experiment_name = _return_experiment_name(parameters)
 
-    final_model_hyps = {h: best_final_model.get_params()[h] for h in model_builder.hyperparameter_grid}
+    final_model_hyps = {h: best_final_model.get_params()[h] for h in model_builder.hyperparameter_grid} # Track only tuned hyperparameters
 
     run = wandb.init(project=parameters['project_name'],
                      name=f"{experiment_name}: Final results",
