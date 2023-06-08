@@ -15,7 +15,6 @@ target: R_100000/10000
 features: 
   - R_100/10
   - R_1000/100
-  - R_10000/1000
 
 random_state: 1358 # random state for reproducibility
 
@@ -36,7 +35,7 @@ use_wandb: True # True or False
 track_inner: False # True or False, whether to track inner cv results
 project_name: Creep_Prediction_ # Name of the project in W&B. If null or not specified, it will be the name of the repo
 notes: # optional
-experiment_name: CM_100000 # If null or not specified, it will be automatically generated
+experiment_name: CM_100.000_2 # If null or not specified, it will be automatically generated
 
 # Specify the model to use and the metric to optimize for.
 model: LGBMRegressor # must be in ['RandomForestRegressor', 'LGBMRegressor', 'XGBRegressor', 'CatBoostRegressor']

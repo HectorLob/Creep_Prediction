@@ -1,6 +1,6 @@
 # Polymer creep modulus prediction by leveraging CAMPUS database and gradient boosting
 
-This repository contains the code to predict the Creep Modulus of polymers using public material data and machine learning techniques. This research project, conducted at [Leartiker](https://www.leartiker.com/), will be presented at the [The ECCOMAS Young Investigators Conference YIC2023](https://yic2023.fe.up.pt/). See the extended abstract [here](https://yic2023.fe.up.pt/wp-content/uploads/2023/05/SC03_04.pdf) for more information.
+This repository contains the code to predict the Creep Modulus of polymers using public material data and machine learning techniques. This research project, conducted at [Leartiker](https://www.leartiker.com/), will be presented at the [The ECCOMAS Young Investigators Conference YIC2023](https://yic2023.fe.up.pt/). See the [extended abstract](https://yic2023.fe.up.pt/wp-content/uploads/2023/05/SC03_04.pdf) for more information.
 
 All credit for the dataset to the [CAMPUS Plastics](https://www.campusplastics.com/) material information system. 
 
@@ -29,7 +29,7 @@ Then activate the environment and you are ready to go.
 
 ## MLOps tools:
 
-This project uses [Kedro](https://kedro.readthedocs.io/en/stable/) for project structuring and data pipelines, and [Weights & Biases](https://docs.wandb.ai/) for experiment tracking. Refer to the documentation of these tools for more information.
+This repository uses [Kedro](https://kedro.readthedocs.io/en/stable/) for project structuring and data pipelines, and [Weights & Biases](https://docs.wandb.ai/) for experiment tracking. Refer to the documentation of these tools for more information.
 
 ## How to run Kedro pipelines:
 
