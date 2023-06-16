@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import uuid
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
+import matplotlib.pyplot as plt
 
 
 
@@ -30,8 +31,10 @@ def map_ratio_to_CM(target: str) -> tuple[str, str]:
 
 
 
-def predicted_ratio_to_CM(y_true_ratio: pd.Series, y_pred_ratio: pd.Series, 
-                          target: str, info_df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
+def predicted_ratio_to_CM(y_true_ratio: pd.Series, 
+                          y_pred_ratio: pd.Series, 
+                          target: str, 
+                          info_df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     """Obtain the true and predicted CM values from the true and predicted ratio values and the info df.
 
     Args:
@@ -59,146 +62,8 @@ def predicted_ratio_to_CM(y_true_ratio: pd.Series, y_pred_ratio: pd.Series,
 
 
 
-def _return_experiment_name(parameters: dict) -> str:
-    """Return the name of the experiment. If the experiment_name parameter is not specified in the parameters.yml file,
-    a random string of 5 characters is returned.
-    """
-    if parameters['experiment_name']:
-        return parameters['experiment_name']
-    else:
-        return str(uuid.uuid4())[:5] # Return a random string of 5 characters
-
-
-
-def _return_config(parameters: dict) -> dict:
-    """Return the parameters of the current experiment configuration.
-    """
-    keys = ['target', 'model', 'features', 'feature_engineering', 'metric', 'random_state', 'n_iter', 'groupby_col']
-    return {key: parameters[key] for key in keys}
-
-
-
-def wandb_inner_fold(parameters: dict, data_info_dict: dict, dev_score: float, 
-                     k_fold_outer: int, k_fold_inner: int, best_hyperparameters: dict):
-    """
-    Track the results of the inner fold of the cross-validation.
-    
-    Args:
-    -----
-    - parameters (dict): conf/base/parameters.yml parameter file
-    - data_info_dict (dict): dictionary containing information about the data
-    - k_fold_outer (int): The current fold number of the outer cv loop.
-    - k_fold_inner (int): idem for the inner cv loop.
-    - dev_score (float): score of the model on the development set
-    - best_hyperparameters (RandomizedSearchCV.best_params_): best hyperparameters found by the RandomizedSearchCV
-
-    Returns:
-    --------
-    None. The function logs the results directly to the W&B dashboard.
-
-    """
-    experiment_name = _return_experiment_name(parameters)
-
-    run = wandb.init(project=parameters['project_name'], 
-                     group=f'Outer {k_fold_outer}',
-                     name=f"{experiment_name}: Outer {k_fold_outer + 1} - Inner {k_fold_inner + 1}",
-                     notes=parameters['notes'],
-                     config={**_return_config(parameters), **best_hyperparameters, **data_info_dict},
-                     )
-    
-    wandb.log({'dev_score': dev_score})
-
-    run.finish()
-    
-
-
-def wandb_outer_fold(parameters: dict, df_traindev: pd.DataFrame, df_test: pd.DataFrame, 
-                     best_model_hyps: dict, score_error_dict: dict, 
-                     analysis_df: pd.DataFrame, k_fold_outer: int):
-    """
-    Track the results of the outer fold of the cross-validation.
-
-    Args:
-    -----
-    - parameters (dict): conf/base/parameters.yml parameter file.
-    - df_traindev (pd.DataFrame): training and development data.
-    - df_test (pd.DataFrame): test set.
-    - best_model_hyps (dict): best hyperparameters found by the model.
-    - score_error_dict (dict): Dictionary consisting of scoring and error metrics.
-    - analysis_df (pd.DataFrame): DataFrame containing analysis data.
-    - k_fold_outer (int): The current fold number of the outer cv loop.
-
-    Returns:
-    --------
-    - None. The function logs the results directly to the W&B dashboard.
-    """
-    data_info_dict = {'traindev_size': df_traindev.shape[0],
-                    'test_size': df_test.shape[0],
-                    'test_frac': df_test.shape[0] / (df_traindev.shape[0] + df_test.shape[0]),
-                    'traindev_groups': df_traindev[parameters['groupby_col']].unique(),
-                    'test_groups': df_test[parameters['groupby_col']].unique(),
-                    }
-    
-    experiment_name = _return_experiment_name(parameters)
-
-    run = wandb.init(project=parameters['project_name'], 
-                     group='Outer',
-                     name=f"{experiment_name}: Outer {k_fold_outer + 1} - Test",
-                     notes=parameters['notes'],
-                     config={**_return_config(parameters), **best_model_hyps, **data_info_dict},
-                     )
-
-    wandb.log(score_error_dict)
-    
-    # Log analysis dataframe
-    wandb.log({'analysis_df': wandb.Table(dataframe=analysis_df.reset_index(), allow_mixed_types=True)})
-    
-    run.finish()  
-
-
-
-def wandb_final_results(final_score_dict: dict, parameters: dict, 
-                        best_final_model, model_builder):
-    """
-    Track and log the final results of the model.
-
-    Args:
-    -----
-    - final_score_dict (dict): Dictionary of scoring metrics.
-    - parameters (dict): conf/base/parameters.yml parameter file.
-    - best_final_model (BaseEstimator): The best model found during the experiment.
-    - model_builder (ModelBuilder): An instance of the ModelBuilder class.
-
-    Returns:
-    --------
-    - None. The function logs the results directly to the W&B dashboard.
-    """
-    experiment_name = _return_experiment_name(parameters)
-
-    final_model_hyps = {h: best_final_model.get_params()[h] for h in model_builder.hyperparameter_grid} # Track only tuned hyperparameters
-
-    run = wandb.init(project=parameters['project_name'],
-                     name=f"{experiment_name}: Final results",
-                     group='Final results',
-                     notes=parameters['notes'],
-                     config={**_return_config(parameters), **final_model_hyps} 
-                     )
-    
-    # Log analysis dataframe
-    final_analysis_df = final_score_dict['final_analysis_df']
-    wandb.log({'final_analysis_df': wandb.Table(dataframe=final_analysis_df.reset_index().sort_values(by=final_analysis_df.columns[-1]), 
-                                                allow_mixed_types=True)})
-
-    # List of keys to remove from the dictionary before logging
-    keys_to_remove = ['final_analysis_df', 'config', 'experiment_name']
-
-    wandb.log({k: v for k, v in final_score_dict.items() if k not in keys_to_remove})
-
-    run.finish()
-
-
-
-def return_analysis_df(y_true: pd.Series, y_pred: pd.Series,
+def return_analysis_df(y_true: pd.Series, 
+                       y_pred: pd.Series,
                        info_df: pd.DataFrame, 
                        target: str,
                        k_fold_test: int,
@@ -383,3 +248,183 @@ def return_final_track_dict(test_track_dict_list: list[dict[str, float]],
             'final_analysis_df': final_analysis_df,
             'config': _return_config(parameters),
             'experiment_name': _return_experiment_name(parameters)}
+
+
+
+def _return_experiment_name(parameters: dict) -> str:
+    """Return the name of the experiment. If the experiment_name parameter is not specified in the parameters.yml file,
+    a random string of 5 characters is returned.
+    """
+    if parameters['experiment_name']:
+        return parameters['experiment_name']
+    else:
+        return str(uuid.uuid4())[:5] # Return a random string of 5 characters
+
+
+
+def _return_config(parameters: dict) -> dict:
+    """Return the parameters of the current experiment configuration.
+    """
+    keys = ['target', 'model', 'features', 'feature_engineering', 'metric', 'random_state', 'n_iter', 'groupby_col']
+    return {key: parameters[key] for key in keys}
+
+
+
+def wandb_inner_fold(parameters: dict, data_info_dict: dict, dev_score: float, 
+                     k_fold_outer: int, k_fold_inner: int, best_hyperparameters: dict):
+    """
+    Track the results of the inner fold of the cross-validation.
+    
+    Args:
+    -----
+    - parameters (dict): conf/base/parameters.yml parameter file
+    - data_info_dict (dict): dictionary containing information about the data
+    - k_fold_outer (int): The current fold number of the outer cv loop.
+    - k_fold_inner (int): idem for the inner cv loop.
+    - dev_score (float): score of the model on the development set
+    - best_hyperparameters (RandomizedSearchCV.best_params_): best hyperparameters found by the RandomizedSearchCV
+
+    Returns:
+    --------
+    None. The function logs the results directly to the W&B dashboard.
+
+    """
+    experiment_name = _return_experiment_name(parameters)
+
+    run = wandb.init(project=parameters['project_name'], 
+                     group=f'Outer {k_fold_outer}',
+                     name=f"{experiment_name}: Outer {k_fold_outer + 1} - Inner {k_fold_inner + 1}",
+                     notes=parameters['notes'],
+                     config={**_return_config(parameters), **best_hyperparameters, **data_info_dict},
+                     )
+    
+    wandb.log({'dev_score': dev_score})
+
+    run.finish()
+    
+
+
+def wandb_outer_fold(parameters: dict, df_traindev: pd.DataFrame, df_test: pd.DataFrame, 
+                     best_model_hyps: dict, score_error_dict: dict, 
+                     analysis_df: pd.DataFrame, k_fold_outer: int):
+    """
+    Track the results of the outer fold of the cross-validation.
+
+    Args:
+    -----
+    - parameters (dict): conf/base/parameters.yml parameter file.
+    - df_traindev (pd.DataFrame): training and development data.
+    - df_test (pd.DataFrame): test set.
+    - best_model_hyps (dict): best hyperparameters found by the model.
+    - score_error_dict (dict): Dictionary consisting of scoring and error metrics.
+    - analysis_df (pd.DataFrame): DataFrame containing analysis data.
+    - k_fold_outer (int): The current fold number of the outer cv loop.
+
+    Returns:
+    --------
+    - None. The function logs the results directly to the W&B dashboard.
+    """
+    data_info_dict = {'traindev_size': df_traindev.shape[0],
+                    'test_size': df_test.shape[0],
+                    'test_frac': df_test.shape[0] / (df_traindev.shape[0] + df_test.shape[0]),
+                    'traindev_groups': df_traindev[parameters['groupby_col']].unique(),
+                    'test_groups': df_test[parameters['groupby_col']].unique(),
+                    }
+    
+    experiment_name = _return_experiment_name(parameters)
+
+    run = wandb.init(project=parameters['project_name'], 
+                     group='Outer',
+                     name=f"{experiment_name}: Outer {k_fold_outer + 1} - Test",
+                     notes=parameters['notes'],
+                     config={**_return_config(parameters), **best_model_hyps, **data_info_dict},
+                     )
+
+    wandb.log(score_error_dict)
+    
+    # Log analysis dataframe
+    wandb.log({'analysis_df': wandb.Table(dataframe=analysis_df.reset_index(), allow_mixed_types=True)})
+    
+    run.finish()  
+
+
+
+def wandb_final_results(final_score_dict: dict, parameters: dict, 
+                        best_final_model, model_builder):
+    """
+    Track and log the final results of the model.
+
+    Args:
+    -----
+    - final_score_dict (dict): Dictionary of scoring metrics.
+    - parameters (dict): conf/base/parameters.yml parameter file.
+    - best_final_model (BaseEstimator): The best model found during the experiment.
+    - model_builder (ModelBuilder): An instance of the ModelBuilder class.
+
+    Returns:
+    --------
+    - None. The function logs the results directly to the W&B dashboard.
+    """
+    experiment_name = _return_experiment_name(parameters)
+
+    final_model_hyps = {h: best_final_model.get_params()[h] for h in model_builder.hyperparameter_grid} # Track only tuned hyperparameters
+
+    run = wandb.init(project=parameters['project_name'],
+                     name=f"{experiment_name}: Final results",
+                     group='Final results',
+                     notes=parameters['notes'],
+                     config={**_return_config(parameters), **final_model_hyps} 
+                     )
+    
+    # Log analysis dataframe
+    final_analysis_df = final_score_dict['final_analysis_df']
+    wandb.log({'final_analysis_df': wandb.Table(dataframe=final_analysis_df.reset_index().sort_values(by=final_analysis_df.columns[-1]), 
+                                                allow_mixed_types=True)})
+
+    # List of keys to remove from the dictionary before logging
+    keys_to_remove = ['final_analysis_df', 'config', 'experiment_name']
+
+    wandb.log({k: v for k, v in final_score_dict.items() if k not in keys_to_remove})
+
+    plot_predictions(final_analysis_df, parameters)
+
+    run.finish()
+
+
+
+def plot_predictions(analysis_df: pd.DataFrame, 
+                     parameters:dict, 
+                     figsize: int=20):
+    "Plot the predictions of the model across the k-fold test sets."
+
+    plt.figure(figsize=(figsize, figsize))
+
+    CM_pred_col = [col for col in analysis_df.columns if col.endswith('_pred') if col.startswith('CM_')][0]
+    CM_pred_col_idx = analysis_df.columns.get_loc(CM_pred_col)
+    CM_real_col = analysis_df.columns[CM_pred_col_idx - 1]
+
+    max_CM = max(analysis_df[CM_real_col].max(), analysis_df[CM_pred_col].max())
+
+    for k_fold in analysis_df['k_fold_test'].unique():
+        df_fold = analysis_df.loc[analysis_df['k_fold_test'] == k_fold, :]
+        CM_real = df_fold[CM_real_col]
+        CM_pred = df_fold[CM_pred_col]
+        plt.scatter(CM_real, CM_pred, label = f'{k_fold + 1} k-fold, $R^2$={r2_score(CM_real, CM_pred):.4f}')
+
+    plt.plot([0, max_CM + max_CM/20], [0, max_CM + max_CM/20], 'k--') # plot the 1:1 line
+    plt.xlabel('True CM [MPa]', fontsize=figsize*1.3, labelpad=figsize)
+    plt.ylabel('Predicted CM [MPa]', fontsize=figsize*1.3, labelpad=figsize)
+    plt.legend(fontsize=figsize*1.2, markerscale=2)
+    plt.xticks(fontsize=figsize)
+    plt.yticks(fontsize=figsize)
+    plt.xlim(0, max_CM + max_CM/20)
+    plt.ylim(0, max_CM + max_CM/20)
+    plt.title(f'{CM_real_col} predictions', fontsize=figsize*1.6, pad=figsize*1.5)
+    plt.grid()
+
+    if parameters['use_wandb']:
+        plt.savefig('test_predictions.png')  # Save the figure as an image file
+        wandb.log({'test_predictions': wandb.Image('test_predictions.png')})  # Log the image file using wandb.Image()
+
+    else:
+        plt.savefig('test_predictions.png')

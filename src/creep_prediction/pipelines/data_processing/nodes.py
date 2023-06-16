@@ -11,8 +11,8 @@ def _rename_cols(creep_data: pd.DataFrame) -> pd.DataFrame:
                    'CM_100000.0': 'CM_100000',
                    'MPa': 'Load'}
     
-    return creep_data.rename(columns=rename_dict)
-
+    # If keys in dict are in the df, rename them
+    return creep_data.rename(columns={key: rename_dict[key] for key in rename_dict.keys() if key in creep_data.columns})
 
 
 def _create_ratio_cols(creep_data: pd.DataFrame) -> pd.DataFrame:

@@ -7,7 +7,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         [
             node(
                 func=preprocess_creep_data,
-                inputs="creep_data",
+                inputs="creep_data", 
                 outputs="preprocessed_creep_data",
                 name="preprocess_creep_data_node",
             ),

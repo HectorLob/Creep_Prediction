@@ -166,6 +166,8 @@ def nested_cv(data: pd.DataFrame, info: pd.DataFrame,
 
     score_error_dict_list = [] # list of dictionaries containing scores and errors for each outer fold
 
+    plt.figure(figsize=(20, 18))
+
     # Outer loop of the nested cv
     for i, (traindev_idx, test_idx) in enumerate(outer_cv.split(df, groups=df[groupby_col])):
 
@@ -224,5 +226,80 @@ def nested_cv(data: pd.DataFrame, info: pd.DataFrame,
 
     else:
         print(final_score_dict)
+        plot_predictions(final_score_dict['final_analysis_df'], parameters)
 
     return best_final_model, final_score_dict
+
+
+
+def _return_target_df(data: pd.DataFrame, info: pd.DataFrame):
+    df = data.copy()
+    print(f'Number of samples: {len(df)}')
+
+    PA_rows = info.loc[info.Polymer.str.contains('PA6'), :].index.to_list()
+    print(f'Number of PA6 samples: {len(PA_rows)}')
+
+    GF_rows = info.loc[info.Fiber_type == 'GF', :].index.to_list()
+    print(f'Number of GF samples: {len(GF_rows)}')
+
+    ultramid_rows = info.loc[info.Family == 'Ultramid®', :].index.to_list()
+    print(f'Number of Ultramid samples: {len(ultramid_rows)}')
+
+    df_target = df.loc[(df.index.isin(PA_rows)) & (df.index.isin(GF_rows)) & (~df.index.isin(ultramid_rows)), :]
+    #df_target = df.loc[(df.index.isin(PA_rows)) & (df.index.isin(GF_rows)), :]
+    df_others = df.loc[~df.index.isin(df_target.index)]
+    print(f'Number of PA6-GF samples: {len(df_target)}')
+    print(f'Number of other samples: {len(df_others)}')
+    
+    return df_target, df_others
+
+
+
+def predictions_on_target(data, info, parameters):
+    """
+    We will try to improve predictions by aiming to a specific target of materials, 
+    defined in return_target_df function.
+    Data in df_others will be sent to train split, and data in df_target will be split into train, dev and test.
+    We want to see if by tuning the hyperparameters on a specific target, we can improve predictions on that target.
+    """
+    # Shuffle data, and info accordingly
+
+    df_target, df_others = _return_target_df(data, info)
+
+    target = df_target.columns[-1] # the last column is the target variable
+    features = list(df_target.columns[:-1]) # the rest but groupby_col are features
+    groupby_col = parameters['groupby_col'] # the column to group by for splitting the data
+    features.remove(groupby_col) 
+
+    print(f'Prediciting {target} using {features}')
+
+    model_builder = create_model_builder(parameters) # create a ModelBuilder object
+
+    scoring_function = model_builder.scoring_function 
+    higher_is_better = model_builder.higher_is_better
+
+    # Initialize best final score and model
+    best_final_score = -np.inf if higher_is_better else np.inf 
+    best_final_model = None
+
+    n_test_groups = 5
+
+    cv = GroupKFold(n_splits=n_test_groups)
+
+    score_error_dict_list = [] # list of dictionaries containing scores and errors for each fold
+
+    for i, (traindev_target_idx, test_target_idx) in enumerate(cv.split(df_target, groups=df_target[groupby_col])):
+        df_traindev_target = df_target.iloc[traindev_target_idx]
+        df_test_target = df_target.iloc[test_target_idx]
+        print(df_traindev_target.shape[0], df_test_target.shape[0])
+        print(f'Test families: {df_test_target.Family.unique()}')
+        print(f'Traindev families: {df_traindev_target.Family.unique()}')
+        print('\n')
+
+
+    pass
+
+
+
+def predict_new_materials():
+    pass

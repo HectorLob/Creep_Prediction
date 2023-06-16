@@ -10,6 +10,13 @@ creep_data:
     sep: ","
     index_col: 0
 
+new_material_data:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/new_material_data.csv
+  load_args:
+    sep: ","
+    index_col: 0
+
 preprocessed_creep_data:
   type: pandas.ParquetDataSet
   filepath: data/02_intermediate/preprocessed_creep_data.pq
