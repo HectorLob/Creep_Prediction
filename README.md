@@ -4,6 +4,7 @@ This repository contains the code to predict the Creep Modulus of polymers using
 
 All credit for the dataset to the [CAMPUS Plastics](https://www.campusplastics.com/) material information system. 
 
+Autor: Héctor Lobato (hlobato@leartiker.com)
 
 ## How to install dependencies
 
