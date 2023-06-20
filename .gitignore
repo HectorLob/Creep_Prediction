@@ -14,6 +14,7 @@ data/**
 logs/**
 catboost_info/**
 wandb/**
+notebooks/**
 
 # except their sub-folders
 !data/**/
@@ -22,9 +23,11 @@ wandb/**
 # also keep all .gitkeep files
 !.gitkeep
 
-# also keep the example dataset
+# also keep the dataset
 !data/01_raw/creep_data.csv
 
+# ignore prediction images
+*.png
 
 ##########################
 # Common files

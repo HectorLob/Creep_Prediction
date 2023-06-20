@@ -1,10 +1,11 @@
+# Auxiliary functions for the data_science pipeline.
+
 import wandb
 import pandas as pd
 import numpy as np
 import uuid
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 import matplotlib.pyplot as plt
-
 
 
 def map_ratio_to_CM(target: str) -> tuple[str, str]:
@@ -91,15 +92,13 @@ def return_analysis_df(y_true: pd.Series,
         R_cols = [col for col in analysis_df.columns if col.startswith('R_')]
         drop_R_cols = [col for col in R_cols if col != target] # drop all R columns except the target
         analysis_df.drop(drop_R_cols, axis=1, inplace=True)
-        # Add predicted R_ values
-        analysis_df[target + '_pred'] = y_pred_R
+        analysis_df[target + '_pred'] = y_pred_R # Add predicted R_ values
     else:
         target_CM = target
 
     CM_cols = [col for col in analysis_df.columns if col.startswith('CM_')]  
     target_CM_idx = CM_cols.index(target_CM) # index of the target CM column
-    # drop all CM columns greater than the target
-    drop_CM_cols = [col for col in CM_cols if CM_cols.index(col) > target_CM_idx]
+    drop_CM_cols = [col for col in CM_cols if CM_cols.index(col) > target_CM_idx] # drop all CM columns greater than the target
     analysis_df = analysis_df.drop(drop_CM_cols, axis=1)
 
     # Add k_fold_test column
@@ -404,6 +403,9 @@ def plot_predictions(analysis_df: pd.DataFrame,
     CM_real_col = analysis_df.columns[CM_pred_col_idx - 1]
 
     max_CM = max(analysis_df[CM_real_col].max(), analysis_df[CM_pred_col].max())
+    max_lim = max_CM + max_CM/20
+
+    plt.plot([0, max_lim], [0, max_lim], 'k--', label='Perfect predictions') # plot the 1:1 line
 
     for k_fold in analysis_df['k_fold_test'].unique():
         df_fold = analysis_df.loc[analysis_df['k_fold_test'] == k_fold, :]
@@ -411,14 +413,13 @@ def plot_predictions(analysis_df: pd.DataFrame,
         CM_pred = df_fold[CM_pred_col]
         plt.scatter(CM_real, CM_pred, label = f'{k_fold + 1} k-fold, $R^2$={r2_score(CM_real, CM_pred):.4f}')
 
-    plt.plot([0, max_CM + max_CM/20], [0, max_CM + max_CM/20], 'k--') # plot the 1:1 line
     plt.xlabel('True CM [MPa]', fontsize=figsize*1.3, labelpad=figsize)
     plt.ylabel('Predicted CM [MPa]', fontsize=figsize*1.3, labelpad=figsize)
     plt.legend(fontsize=figsize*1.2, markerscale=2)
     plt.xticks(fontsize=figsize)
     plt.yticks(fontsize=figsize)
-    plt.xlim(0, max_CM + max_CM/20)
-    plt.ylim(0, max_CM + max_CM/20)
+    plt.xlim(0, max_lim)
+    plt.ylim(0, max_lim)
     plt.title(f'{CM_real_col} predictions', fontsize=figsize*1.6, pad=figsize*1.5)
     plt.grid()
 
