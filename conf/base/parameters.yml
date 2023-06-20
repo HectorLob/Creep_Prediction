@@ -1,29 +1,49 @@
-# see detailed explanations in parameters_readme.md
-
+# target:
+  # CM values can go here (CM_1000, CM_10000), although ratios are recommended (R_1000/100, R_10000/1000)
+  # When we set a ratio as target, e.g. R_1000/100, CM_1000 will be computed as CM_1000 = R_1000/100 * CM_100
 target: R_10000/1000
 
+# features:
+  # Apart from 'Load' and 'Temperature', which will always be used, choose from:
+    # Charpy_notched_+23C, Charpy_notched_-30C, Charpy_+23C, Tensile_modulus,
+    # Molding_shrinkage_normal, Molding_shrinkage_parallel,
+    # Coeff_linear_therm_expansion_normal, Coeff_linear_therm_expansion_parallel,
+    # Melting_temp, Temp_deflection_0.45MPa, Temp_deflection_1.80MPa,
+    # Vicat_softening_temp, Density, Humidity_absorption, G_prima, G_2prima
+  # Adding previous ratios is important to obtain good results, e.g.:
+    # R_100/10, R_1000/100 for target: R_10000/1000
 features: 
   - R_100/10
   - R_1000/100
 
-random_state: 13 # random state for reproducibility
+random_state: 1358 # random state for reproducibility
 
+# feature_engineering:
+  # Implemented functions: log_features, feature_interactions, square_ratios. 
+  # If none wanted, set to null or leave blank.
+  # If more than one wanted, list them in the order you want them to be applied.
 feature_engineering:
 
+# Nested cross-validation parameters:
 groupby_col: Family # column to group by for cv
 k_fold_outer: 10 # number of folds for outer cv
 k_fold_inner: 5 # number of folds for inner cv
-n_iter: 1   # number of iterations for hyperparameter optimization
+n_iter: 1 # number of iterations for hyperparameter optimization
 
+
+# W&B parameters
 use_wandb: True # True or False. W&B account is required if True
 track_inner: False # True or False, whether to track inner cv results
-project_name: asda # Name of the project in W&B. If null or not specified, it will be the name of the repo
-notes: # optional, to add notes to the current experiment
-experiment_name: # If null or not specified, it will be randomly generated 
+project_name:  # Name of the project in W&B. If null or not specified, it will be the name of the repo
+notes:  # optional, to add notes to the current experiment
+experiment_name:  # If null or not specified, it will be randomly generated 
 
+# Specify the model to use and the metric to optimize for.
 model: LGBMRegressor # must be in ['RandomForestRegressor', 'LGBMRegressor', 'XGBRegressor', 'CatBoostRegressor']
-metric: r2         # must be in ['r2', 'mse', 'mae', 'rmse', 'mape']
+metric: r2 # must be in ['r2', 'mse', 'mae', 'rmse', 'mape']
 
+# Specify the hyperparameter grid for the chosen model.
+# As tuning hyps. does not improve predictions, we leave LGBM's hyps. commented (with n_iter: 1) to use default values.
 hyperparameter_grid:
 
   LGBMRegressor:
