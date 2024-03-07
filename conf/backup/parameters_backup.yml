@@ -1,0 +1,122 @@
+# Target:
+  # CM values can go here (CM_1000, CM_10000), although ratios are recommended (R_1000/100, R_10000/1000)
+  # When we set a ratio as target, e.g. R_1000/100, CM_1000 will be computed as CM_1000 = R_1000/100 * CM_100
+target: R_e4/e3
+
+
+# Features:
+  # Choose among:
+    # Load, Temperature
+    # Charpy_notched_+23C, Charpy_notched_-30C, Charpy_+23C, Tensile_modulus,
+    # Molding_shrinkage_normal, Molding_shrinkage_parallel,
+    # Coeff_linear_therm_expansion_normal, Coeff_linear_therm_expansion_parallel,
+    # Melting_temp, Temp_deflection_0.45MPa, Temp_deflection_1.80MPa,
+    # Vicat_softening_temp, Density, Humidity_absorption, G_prima, G_2prima
+  # Adding previous ratios is important to obtain good results, e.g.:
+    # R_100/10, R_1000/100 for target: R_10000/1000
+
+features:
+- R_e3/e2
+- R_e2/e1
+- R_e1/e0
+random_state: 123 # random state for reproducibility
+
+# feature_engineering:
+  # Implemented functions: log_features, feature_interactions, square_ratios. 
+  # If none wanted, set to null or leave blank.
+  # If more than one wanted, list them in the order you want them to be applied.
+feature_engineering:
+
+
+# Cross-validation parameters:
+tune_hyps: false  # True will used nested_cv and False will use standard k-fold cv
+groupby_col: Family # column to group by for cv
+
+# If tune_hyps: False, specify the number of folds
+k_fold: 10
+
+# If tune_hyps: True, specify the number of folds for outer and inner cv
+k_fold_outer: 10 # number of folds for outer cv
+k_fold_inner: 5 # number of folds for inner cv
+n_iter: 50 # number of iterations for hyperparameter optimization 
+
+
+# W&B parameters:
+use_wandb: false # True or False. W&B account is required if True
+project_name: LAST_LAST # Name of the project in W&B. If null or not specified, it will be the name of the repo
+experiment_name: LR_MC2_4  # If null or not specified, it will be randomly generated 
+notes: # optional, to add notes to the current experiment
+tags: # optional, to add tags to the current experiment. Even if 1, put it in a list
+
+
+# Plotting parameters:
+plot_title: LR_MC2_4  # Model configuration 3 predictions # optional, to add a title to the parity plot
+
+# Model parameters:
+  # Specify the model among: 
+    # 'LinearRegression', 'Ridge', 'Lasso', 'DecisionTreeRegressor', 'RandomForestRegressor', 'XGBRegressor', 'LGBMRegressor'
+
+model: LinearRegression
+
+metric: r2 # Metric to optimize for. It must be in ['r2', 'mse', 'mae', 'rmse', 'mape']
+
+# Specify the hyperparameters. If null or not specified, default values will be used.
+  # if tune_hyps: true, put hyps. in a list, even if only one, e.g.:
+    # n_estimators: [100, 500, 1000]
+    # n_estimators: [1000] # to fix that value without tuning it
+  # else, to use a certain hyp., it must be a value, e.g.:
+    # n_estimators: 1000
+hyperparameters:
+
+  LGBMRegressor: #{}
+    max_depth: 4
+    #boosting_type: ["gbdt", "dart"] # default = gbdt 
+    #num_leaves: [20, 40, 60, 80, 100]
+    #learning_rate: [0.001, 0.01, 0.1, 0.2, 0.3]
+    #n_estimators: [10, 50, 100, 200, 500, 1000]
+    #subsample_for_bin: [2000, 4000, 6000, 8000, 10000]
+    #min_split_gain: [0.0, 0.1, 0.2]
+    #min_child_weight: [1e-3, 1e-2, 1e-1, 1]
+    #min_child_samples: [5, 10, 25, 50]
+    #subsample: [0.7, 0.8, 0.9, 1.0]
+    #subsample_freq: [0, 1, 2, 3]
+    #colsample_bytree: [0.7, 0.8, 0.9, 1.0]
+    #reg_alpha: [0.1, 0.2, 0.5, 1]
+    #reg_lambda: [0.0, 0.5, 1.0, 1.5, 2.0]
+    #scale_pos_weight: [0.5, 1.0, 2, 5]
+
+  XGBRegressor:
+    max_depth: 3 # [3, 5, 6, 8, 10, 15, 25, 50]
+    #max_leaves: [5, 10, 25, 50]
+    #learning_rate: [0.001, 0.01, 0.1, 0.2, 0.3]
+    #n_estimators: [10, 50, 100, 200, 500, 1000]
+    #min_child_weight: [1e-3, 1e-2, 1e-1, 1]
+    #subsample: [0.7, 0.8, 0.9, 1.0]
+    #colsample_bytree: [0.7, 0.8, 0.9, 1.0]
+
+  RandomForestRegressor: #{}
+    max_depth: 5 #[5, 10, 20, 50]
+    #criterion: ["squared_error", "friedman_mse", "ab solute_error", "poisson"]
+    #n_estimators: [100] #[50, 100, 200, 500] # default = 100
+    #min_samples_split: [2, 5, 5]
+    #min_samples_leaf: [1, 2, 4]
+    #max_features: ['sqrt', 'log2']
+
+  DecisionTreeRegressor: #{}
+    max_depth: 5 #[null, 10, 25, 50]
+    #criterion: ["squared_error", "poisson"]
+    #splitter: ["best", "random"] # default = best
+    #max_leaf_nodes: [10, 20, 40, 60]
+    #min_samples_split: 10 #[2, 4, 6, 8, 10]
+    #min_samples_leaf: [1, 2, 4, 6, 8]
+    #min_weight_fraction_leaf: [0.0, 0.01, 0.1, 0.2]
+    #max_features: ['sqrt', 'log2']
+
+  LinearRegression: {}
+    #fit_intercept: [true, false] # default = true
+
+  Lasso:
+    alpha: [0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1] # default = 1.0
+
+  Ridge:
+    alpha: [0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1] # default = 1.0

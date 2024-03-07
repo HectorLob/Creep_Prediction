@@ -1,0 +1,25 @@
+black~=22.0
+flake8>=3.7.9, <5.0
+ipython>=7.31.1, <8.0; python_version < '3.8'
+ipython~=8.10; python_version >= '3.8'
+isort~=5.0
+jupyter~=1.0
+jupyterlab_server>=2.11.1, <2.16.0
+jupyterlab~=3.0, <3.6.0
+kedro-telemetry~=0.2.0
+nbstripout~=0.4
+pytest-cov~=3.0
+pytest-mock>=1.7.1, <2.0
+kedro==0.18.8
+kedro_datasets[pandas]==1.4.0
+kedro_viz==6.2.0
+lightgbm==3.3.5
+matplotlib==3.7.1
+numpy==1.24.3
+pandas==1.5.3
+pytest==7.3.1
+scikit_learn==1.2.2
+seaborn==0.12.2
+setuptools==67.7.2
+wandb==0.15.3
+xgboost==1.7.4
