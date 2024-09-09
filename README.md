@@ -1,6 +1,6 @@
 # Prediction of long-term creep modulus of thermoplastics by brief testing data and interpretable machine learning
 
-This repository contains the code to predict the Creep Modulus of thermoplastics using public material data and machine learning. This research project, conducted at [Leartiker](https://www.leartiker.com/), has been accepted for publication in International Journal of Solids and Structures, doi: https://doi.org/10.1016/j.ijsolstr.2024.113014
+This repository contains the code to predict the Creep Modulus of thermoplastics using public material data and machine learning. This research project, conducted at [Leartiker](https://www.leartiker.com/), has been accepted for publication in *International Journal of Solids and Structures*, DOI: https://doi.org/10.1016/j.ijsolstr.2024.113014
 
 All credit for the dataset to the [CAMPUS Plastics](https://www.campusplastics.com/) material information system. 
 
